@@ -145,6 +145,8 @@ export function App() {
   const [serverOffset, setServerOffset] = useState(0);
   const [syncStatus, setSyncStatus] = useState<'syncing' | 'synced' | 'offline'>('syncing');
   const [time, setTime] = useState<TimeLeft>(() => calculateTimeLeft(TARGET_DATE));
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+  const [showClock, setShowClock] = useState(false);
   const [lastSecond, setLastSecond] = useState(-1);
   const [lastMinute, setLastMinute] = useState(-1);
   const [isComplete, setIsComplete] = useState(false);
@@ -155,6 +157,12 @@ export function App() {
   const [confetti, setConfetti] = useState<Array<{ id: number; x: number; color: string; delay: number; size: number; duration: number; shape: ConfettiShape }>>([]);
   
   const haptics = useHaptics();
+
+  // Toggle between countdown and clock
+  const toggleView = useCallback(() => {
+    setShowClock(prev => !prev);
+    haptics.tick();
+  }, [haptics]);
 
   // Sync with world time API (Atomuhr) - uses local timezone
   useEffect(() => {
@@ -276,6 +284,7 @@ export function App() {
       delay: Math.random() * 3,
       size: 6 + Math.random() * 10,
       duration: 3 + Math.random() * 2,
+      shape: (Math.random() > 0.5 ? 'circle' : 'square') as ConfettiShape,
     }));
     setConfetti(newConfetti);
     
@@ -332,6 +341,7 @@ export function App() {
       }
 
       setTime(newTime);
+      setCurrentTime(new Date(Date.now() + serverOffset));
     }, 100);
 
     return () => clearInterval(interval);
@@ -385,7 +395,7 @@ export function App() {
 
       {/* Confetti */}
       {confetti.map(c => (
-        <ConfettiPiece key={c.id} x={c.x} color={c.color} delay={c.delay} size={c.size} duration={c.duration} />
+        <ConfettiPiece key={c.id} x={c.x} color={c.color} delay={c.delay} size={c.size} duration={c.duration} shape={c.shape} />
       ))}
 
       {/* Screen Flash */}
@@ -412,69 +422,126 @@ export function App() {
               color: isFinal10 ? '#ff4500' : isLastMinute ? '#d4af37' : '#666',
             }}
           >
-            Neujahr 2026
+            {showClock ? 'Aktuelle Uhrzeit' : 'Neujahr 2026'}
           </h1>
 
-          {/* Countdown */}
-          <div className="flex items-center gap-1 sm:gap-2">
-            {/* Hours */}
-            <div className="flex flex-col items-center">
-              <div 
-                className="font-[Cinzel] text-6xl sm:text-8xl font-bold transition-all duration-300 w-[1.3em] text-center"
-                style={{ 
-                  color: '#e8e8e8',
-                  fontVariantNumeric: 'tabular-nums',
-                  fontFeatureSettings: '"tnum"',
-                  textShadow: isFinal10 
-                    ? `0 0 ${20 + intensity * 40}px rgba(255,69,0,${0.5 + intensity * 0.5})`
-                    : 'none',
-                }}
-              >
-                {fmt(time.hours)}
-              </div>
-              <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Std</span>
-            </div>
+          {/* Clickable Time Display */}
+          <div 
+            className="flex items-center gap-1 sm:gap-2 cursor-pointer select-none active:scale-95 transition-transform"
+            onClick={toggleView}
+          >
+            {showClock ? (
+              /* Current Time Display */
+              <>
+                <div className="flex flex-col items-center">
+                  <div 
+                    className="font-[Cinzel] text-6xl sm:text-8xl font-bold transition-all duration-300 w-[1.3em] text-center"
+                    style={{ 
+                      color: '#e8e8e8',
+                      fontVariantNumeric: 'tabular-nums',
+                      fontFeatureSettings: '"tnum"',
+                    }}
+                  >
+                    {fmt(currentTime.getHours())}
+                  </div>
+                  <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Std</span>
+                </div>
 
-            <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
+                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
 
-            {/* Minutes */}
-            <div className="flex flex-col items-center">
-              <div 
-                className="font-[Cinzel] text-6xl sm:text-8xl font-bold transition-all duration-300 w-[1.3em] text-center"
-                style={{ 
-                  color: isLastMinute ? '#d4af37' : '#e8e8e8',
-                  fontVariantNumeric: 'tabular-nums',
-                  fontFeatureSettings: '"tnum"',
-                  textShadow: isLastMinute 
-                    ? '0 0 20px rgba(212,175,55,0.5)'
-                    : 'none',
-                }}
-              >
-                {fmt(time.minutes)}
-              </div>
-              <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Min</span>
-            </div>
+                <div className="flex flex-col items-center">
+                  <div 
+                    className="font-[Cinzel] text-6xl sm:text-8xl font-bold transition-all duration-300 w-[1.3em] text-center"
+                    style={{ 
+                      color: '#e8e8e8',
+                      fontVariantNumeric: 'tabular-nums',
+                      fontFeatureSettings: '"tnum"',
+                    }}
+                  >
+                    {fmt(currentTime.getMinutes())}
+                  </div>
+                  <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Min</span>
+                </div>
 
-            <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
+                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
 
-            {/* Seconds */}
-            <div className="flex flex-col items-center">
-              <div 
-                className="font-[Cinzel] text-6xl sm:text-8xl font-bold transition-all duration-150 w-[1.3em] text-center"
-                style={{ 
-                  color: isFinal10 ? '#ff4500' : '#e8e8e8',
-                  fontVariantNumeric: 'tabular-nums',
-                  fontFeatureSettings: '"tnum"',
-                  textShadow: isFinal10 
-                    ? `0 0 ${30 + intensity * 50}px rgba(255,69,0,${0.8 + intensity * 0.2}), 0 0 ${60 + intensity * 80}px rgba(255,69,0,0.4)`
-                    : 'none',
-                  transform: isFinal10 ? `scale(${1 + intensity * 0.15})` : 'scale(1)',
-                }}
-              >
-                {fmt(time.seconds)}
-              </div>
-              <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Sek</span>
-            </div>
+                <div className="flex flex-col items-center">
+                  <div 
+                    className="font-[Cinzel] text-6xl sm:text-8xl font-bold transition-all duration-150 w-[1.3em] text-center"
+                    style={{ 
+                      color: '#e8e8e8',
+                      fontVariantNumeric: 'tabular-nums',
+                      fontFeatureSettings: '"tnum"',
+                    }}
+                  >
+                    {fmt(currentTime.getSeconds())}
+                  </div>
+                  <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Sek</span>
+                </div>
+              </>
+            ) : (
+              /* Countdown Display */
+              <>
+                {/* Hours */}
+                <div className="flex flex-col items-center">
+                  <div 
+                    className="font-[Cinzel] text-6xl sm:text-8xl font-bold transition-all duration-300 w-[1.3em] text-center"
+                    style={{ 
+                      color: '#e8e8e8',
+                      fontVariantNumeric: 'tabular-nums',
+                      fontFeatureSettings: '"tnum"',
+                      textShadow: isFinal10 
+                        ? `0 0 ${20 + intensity * 40}px rgba(255,69,0,${0.5 + intensity * 0.5})`
+                        : 'none',
+                    }}
+                  >
+                    {fmt(time.hours)}
+                  </div>
+                  <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Std</span>
+                </div>
+
+                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
+
+                {/* Minutes */}
+                <div className="flex flex-col items-center">
+                  <div 
+                    className="font-[Cinzel] text-6xl sm:text-8xl font-bold transition-all duration-300 w-[1.3em] text-center"
+                    style={{ 
+                      color: isLastMinute ? '#d4af37' : '#e8e8e8',
+                      fontVariantNumeric: 'tabular-nums',
+                      fontFeatureSettings: '"tnum"',
+                      textShadow: isLastMinute 
+                        ? '0 0 20px rgba(212,175,55,0.5)'
+                        : 'none',
+                    }}
+                  >
+                    {fmt(time.minutes)}
+                  </div>
+                  <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Min</span>
+                </div>
+
+                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
+
+                {/* Seconds */}
+                <div className="flex flex-col items-center">
+                  <div 
+                    className="font-[Cinzel] text-6xl sm:text-8xl font-bold transition-all duration-150 w-[1.3em] text-center"
+                    style={{ 
+                      color: isFinal10 ? '#ff4500' : '#e8e8e8',
+                      fontVariantNumeric: 'tabular-nums',
+                      fontFeatureSettings: '"tnum"',
+                      textShadow: isFinal10 
+                        ? `0 0 ${30 + intensity * 50}px rgba(255,69,0,${0.8 + intensity * 0.2}), 0 0 ${60 + intensity * 80}px rgba(255,69,0,0.4)`
+                        : 'none',
+                      transform: isFinal10 ? `scale(${1 + intensity * 0.15})` : 'scale(1)',
+                    }}
+                  >
+                    {fmt(time.seconds)}
+                  </div>
+                  <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Sek</span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Final countdown big number */}
