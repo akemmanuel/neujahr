@@ -1,8 +1,11 @@
 import { serve } from "bun";
 import index from "./index.html";
+import test from "./test.html";
 
 const server = serve({
   routes: {
+    "/test": test,
+    
     // Serve index.html for all unmatched routes.
     "/*": index,
 

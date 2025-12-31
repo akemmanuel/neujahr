@@ -161,7 +161,7 @@ export function App() {
   // Toggle between countdown and clock
   const toggleView = useCallback(() => {
     setShowClock(prev => !prev);
-    haptics.tick();
+    haptics.vibrate(50); // Kurze, spürbare Vibration beim Wechseln
   }, [haptics]);
 
   // Sync with world time API (Atomuhr) - uses local timezone
@@ -309,8 +309,6 @@ export function App() {
           console.log('Minute changed!', lastMinute, '->', newTime.minutes);
           haptics.minuteImpact();
           spawnMinuteConfetti();
-          setShowFlash(true);
-          setTimeout(() => setShowFlash(false), 200);
         }
 
         // Hour changed - detect when we go from minute 0 to 59 (hour decreased)
@@ -427,7 +425,7 @@ export function App() {
 
           {/* Clickable Time Display */}
           <div 
-            className="flex items-center gap-1 sm:gap-2 cursor-pointer select-none active:scale-95 transition-transform"
+            className="flex items-center gap-3 sm:gap-4 cursor-pointer select-none active:scale-95 transition-transform"
             onClick={toggleView}
           >
             {showClock ? (
@@ -447,7 +445,7 @@ export function App() {
                   <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Std</span>
                 </div>
 
-                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
+                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 px-1 text-center">:</span>
 
                 <div className="flex flex-col items-center">
                   <div 
@@ -463,7 +461,7 @@ export function App() {
                   <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Min</span>
                 </div>
 
-                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
+                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 px-1 text-center">:</span>
 
                 <div className="flex flex-col items-center">
                   <div 
@@ -500,7 +498,7 @@ export function App() {
                   <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Std</span>
                 </div>
 
-                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
+                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 px-1 text-center">:</span>
 
                 {/* Minutes */}
                 <div className="flex flex-col items-center">
@@ -520,7 +518,7 @@ export function App() {
                   <span className="text-xs tracking-[0.3em] uppercase mt-2 text-gray-500">Min</span>
                 </div>
 
-                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 w-[0.5em] text-center">:</span>
+                <span className="font-[Cinzel] text-4xl sm:text-6xl text-gray-600 mb-6 px-1 text-center">:</span>
 
                 {/* Seconds */}
                 <div className="flex flex-col items-center">
